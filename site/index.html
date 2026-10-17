@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReleaseRadar — never miss what's new, never see it twice</title>
+  <meta name="description" content="ReleaseRadar watches public APIs and feeds and alerts your Slack or Discord within a minute of a genuinely new item — with a built-in alarm if the monitor itself stops. Demo project.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f5fd8'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23fff' stroke-width='2.5' stroke-dasharray='30 12'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="logo" aria-hidden="true"></span> ReleaseRadar</a>
+      <nav class="nav" aria-label="Main">
+        <a href="#problem">Problem</a>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#results">Results</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a class="nav-cta" href="demo.html">Product mockup</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="container">
+      <span class="badge badge-demo">Demo project · results to be measured</span>
+      <h1>Never miss what's new. Never see it twice.</h1>
+      <p class="sub">ReleaseRadar watches public APIs and feeds, and alerts your Slack or Discord within a minute of a genuinely new item — with a built-in alarm if the monitor itself stops.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="demo.html">See the product mockup</a>
+        <a class="btn btn-ghost" href="#how">How it works</a>
+      </div>
+      <p class="note">A small, production-style monitor-and-alert bot: official APIs only, database-enforced dedupe, two-layer health checks. Public and synthetic data throughout.</p>
+    </div>
+  </div>
+
+  <!-- ============ PROBLEM ============ -->
+  <section id="problem">
+    <div class="container">
+      <p class="section-kicker">The problem</p>
+      <h2 class="section-title">Important updates slip by — or arrive five times</h2>
+      <p class="section-lead">Whether it is dependency releases, public tenders or a competitor's changelog, the two failure modes are always the same: you miss it, or you get spammed.</p>
+      <ul class="problem-list">
+        <li><strong>No one watches every feed by hand.</strong> Dependency releases, public tender notices and changelogs appear without warning. Checking sources manually wastes hours and still misses things.</li>
+        <li><strong>Naive scrapers alert on page position.</strong> When a list is re-ordered, boosted or edited, position-based watchers re-announce the same item as if it were new — duplicate spam in your channel.</li>
+        <li><strong>Monitors fail silently.</strong> A crashed process, an expired token or a dead VM means you find out only when you notice the alert you never received.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section id="how" class="alt">
+    <div class="container">
+      <p class="section-kicker">How it works</p>
+      <h2 class="section-title">Poll politely, detect by ID, alert once, watch yourself</h2>
+      <p class="section-lead">Four steps per 30-second cycle inside a single Python process — and a health layer that can report its own death.</p>
+
+      <div class="grid grid-2" style="margin-bottom:28px;">
+        <div class="card">
+          <span class="num">1</span>
+          <h3>Poll politely</h3>
+          <p>Official APIs only, with conditional requests (ETags) and rate-limit awareness. Unchanged sources cost almost nothing and never trip limits.</p>
+        </div>
+        <div class="card">
+          <span class="num">2</span>
+          <h3>Detect by stable ID</h3>
+          <p>Every item is keyed by its stable ID (<code>source:id</code>) in SQLite <em>before</em> alerting. Re-ordered, edited or re-shared entries can never alert twice — the database enforces it.</p>
+        </div>
+        <div class="card">
+          <span class="num">3</span>
+          <h3>Filter (optional)</h3>
+          <p>An AI checks each new item against your plain-English criteria and adds a one-line summary. Off by default; fails open so nothing is silently lost.</p>
+        </div>
+        <div class="card">
+          <span class="num">4</span>
+          <h3>Alert + watch itself</h3>
+          <p>Rich Slack/Discord alerts with measured latency, periodic heartbeats, a loud @here alarm if checks fail for 5 minutes, and an external dead-man switch if the host dies.</p>
+        </div>
+      </div>
+
+      <figure class="diagram-wrap" style="margin:0;">
+        <svg class="diagram" viewBox="0 0 960 560" role="img" aria-labelledby="arch-title arch-desc">
+          <title id="arch-title">ReleaseRadar architecture</title>
+          <desc id="arch-desc">A single Python process polls sources on a scheduler, normalizes items, deduplicates them in SQLite, optionally filters them with an LLM, and notifies Discord or Slack. A health subsystem records checks, alerts a watchdog, pings an external dead-man switch, and posts heartbeats.</desc>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="arrowhead"></path>
+            </marker>
+          </defs>
+
+          <!-- Inputs -->
+          <rect class="box box-in" x="8" y="64" width="150" height="40" rx="8"></rect>
+          <text class="label" x="83" y="89" text-anchor="middle">config.yaml</text>
+          <rect class="box box-in" x="8" y="116" width="150" height="40" rx="8"></rect>
+          <text class="label" x="83" y="141" text-anchor="middle">.env (keys)</text>
+          <path class="flow" d="M158 84 H176"></path>
+          <path class="flow" d="M158 136 H176"></path>
+
+          <!-- Core process -->
+          <rect class="box box-core" x="180" y="10" width="430" height="482" rx="14"></rect>
+          <text class="label accent-text" x="395" y="34" text-anchor="middle">radar · single Python process (Docker + systemd)</text>
+
+          <!-- Stage 1 -->
+          <rect class="box" x="200" y="48" width="390" height="48" rx="8"></rect>
+          <text class="label" x="395" y="68" text-anchor="middle">Scheduler loop</text>
+          <text class="sub" x="395" y="86" text-anchor="middle">every 30 s ± 3 s jitter, graceful shutdown</text>
+          <path class="flow" d="M395 96 V108"></path>
+
+          <!-- Stage 2 -->
+          <rect class="box" x="200" y="110" width="390" height="48" rx="8"></rect>
+          <text class="label" x="395" y="130" text-anchor="middle">SourceAdapter — GitHub Releases (plug-in: tender feeds)</text>
+          <text class="sub" x="395" y="148" text-anchor="middle">httpx + ETag conditional requests + rate-limit guard</text>
+          <path class="flow" d="M395 158 V170"></path>
+
+          <!-- Stage 3 -->
+          <rect class="box" x="200" y="172" width="390" height="48" rx="8"></rect>
+          <text class="label" x="395" y="192" text-anchor="middle">Normalizer</text>
+          <text class="sub" x="395" y="210" text-anchor="middle">→ Item(source, item_id, title, url, published_at, …)</text>
+          <path class="flow" d="M395 220 V232"></path>
+
+          <!-- Stage 4 -->
+          <rect class="box" x="200" y="234" width="390" height="48" rx="8"></rect>
+          <text class="label" x="395" y="254" text-anchor="middle">Deduper — SQLite seen_items</text>
+          <text class="sub" x="395" y="272" text-anchor="middle">PK = source:stable_id · INSERT OR IGNORE · restart-safe</text>
+          <path class="flow" d="M395 282 V294"></path>
+
+          <!-- Stage 5 -->
+          <rect class="box" x="200" y="296" width="390" height="48" rx="8"></rect>
+          <text class="label" x="395" y="316" text-anchor="middle">Filter (optional, off by default)</text>
+          <text class="sub" x="395" y="334" text-anchor="middle">LLM keep/skip + one-line summary · cached · fails open</text>
+          <path class="flow" d="M395 344 V356"></path>
+
+          <!-- Stage 6 -->
+          <rect class="box" x="200" y="358" width="390" height="48" rx="8"></rect>
+          <text class="label" x="395" y="378" text-anchor="middle">Notifier</text>
+          <text class="sub" x="395" y="396" text-anchor="middle">Discord / Slack embed · alerts table records latency</text>
+
+          <!-- Health row inside core -->
+          <rect class="box" x="200" y="420" width="390" height="56" rx="8"></rect>
+          <text class="label" x="395" y="442" text-anchor="middle">Health: CheckRecorder → Watchdog</text>
+          <text class="sub" x="395" y="460" text-anchor="middle">every check logged · loud alert after 5 min failing · heartbeat 6 h</text>
+          <path class="flow" d="M395 406 V418"></path>
+
+          <!-- Outputs -->
+          <rect class="box box-out" x="670" y="330" width="210" height="48" rx="8"></rect>
+          <text class="label" x="775" y="350" text-anchor="middle">Discord · #radar-alerts</text>
+          <text class="sub" x="775" y="368" text-anchor="middle">one post per new item, deduped</text>
+
+          <rect class="box box-out" x="670" y="394" width="210" height="48" rx="8"></rect>
+          <text class="label" x="775" y="414" text-anchor="middle">Slack webhook (optional)</text>
+          <text class="sub" x="775" y="432" text-anchor="middle">same payload, pluggable adapter</text>
+
+          <rect class="box box-out" x="670" y="458" width="210" height="48" rx="8"></rect>
+          <text class="label" x="775" y="478" text-anchor="middle">Healthchecks.io (dead-man)</text>
+          <text class="sub" x="775" y="496" text-anchor="middle">pinged after every good cycle</text>
+
+          <rect class="box box-out" x="670" y="522" width="210" height="34" rx="8"></rect>
+          <text class="label" x="775" y="544" text-anchor="middle">Discord · #radar-health</text>
+
+          <!-- Flows to outputs -->
+          <path class="flow" d="M590 376 C 630 376, 630 354, 668 354"></path>
+          <path class="flow" d="M590 388 C 634 388, 634 418, 668 418"></path>
+          <path class="flow" d="M590 442 C 628 442, 634 482, 668 482"></path>
+          <path class="flow" d="M590 464 C 634 464, 630 539, 668 539"></path>
+          <path class="flow" d="M775 506 V520" style="stroke-dasharray:4 4;"></path>
+          <text class="sub" x="786" y="517">alerts you if pings stop</text>
+        </svg>
+        <figcaption>One process, one loop: poll politely, dedupe by stable ID in SQLite, alert once, and keep two independent layers watching the watcher — an internal watchdog for failing checks, an external dead-man switch for a dead host.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section id="features">
+    <div class="container">
+      <p class="section-kicker">Features</p>
+      <h2 class="section-title">Built small, built to be trusted</h2>
+      <p class="section-lead">Narrow scope, finished and measurable — everything a monitor needs, nothing it doesn't.</p>
+      <div class="features">
+        <div class="feature"><strong>Sub-minute alerts</strong><span>30-second polling of official APIs with ETags; latency bounded by the poll interval and measured per alert.</span></div>
+        <div class="feature"><strong>Zero-duplicate guarantee</strong><span>Stable-ID dedupe in SQLite before alerting, plus a unique constraint on the alerts table — one post per item, enforced by the database.</span></div>
+        <div class="feature"><strong>Restart-safe state</strong><span>All state lives in a SQLite file; crashes and redeploys never re-announce old items.</span></div>
+        <div class="feature"><strong>Plain-English AI filtering</strong><span>Optional, off by default: screen items against your criteria, get a one-line summary and a visible reason for every skip. Fails open.</span></div>
+        <div class="feature"><strong>Slack and Discord</strong><span>Rich embeds/blocks via webhooks — no bot app review required. Notifiers are pluggable.</span></div>
+        <div class="feature"><strong>Two-layer health</strong><span>Heartbeat every 6 h, loud @here alarm if checks fail for 5+ minutes, external dead-man switch if the host itself dies.</span></div>
+        <div class="feature"><strong>Every check logged</strong><span>JSON lines + a SQLite checks table; one command (<code>radar report</code>) turns them into uptime and latency statistics.</span></div>
+        <div class="feature"><strong>Runs free</strong><span>Docker + systemd on a free-tier VM; GitHub API, Discord webhooks and Healthchecks.io all fit free tiers.</span></div>
+        <div class="feature"><strong>Pluggable sources</strong><span>GitHub releases today; public tender notices or any public JSON/RSS feed with permissive terms via the same adapter interface.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="results" class="alt">
+    <div class="container">
+      <p class="section-kicker">Results</p>
+      <h2 class="section-title">Measured, not claimed</h2>
+      <p class="section-lead">Every figure below must come from a real, unattended measured run and is generated by <code>radar report</code> — never typed by hand. Until that run completes, the values stay as clearly marked placeholders.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>How it is measured</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Unattended runtime</td><td class="placeholder">[TO BE MEASURED — pending 7-day run]</td><td>Checks-table rows spanning ≥ 7 days; max gap between cycles</td></tr>
+            <tr><td>Checks logged</td><td class="placeholder">[TO BE MEASURED]</td><td>Count of cycles vs expected (~20,160 over 7 days at 30 s)</td></tr>
+            <tr><td>Duplicate alerts</td><td class="placeholder">[TO BE MEASURED]</td><td>Alerts-table unique keys + independent channel audit</td></tr>
+            <tr><td>Publish-to-alert latency (p50 / p95)</td><td class="placeholder">[TO BE MEASURED] / [TO BE MEASURED]</td><td>Sandbox releases: alerted_at − published_at (source timestamp)</td></tr>
+            <tr><td>Simulated outage → loud alert</td><td class="placeholder">[TO BE MEASURED]</td><td><code>radar simulate-outage</code>; target window 5–6 min</td></tr>
+            <tr><td>Host death → external alert</td><td class="placeholder">[TO BE MEASURED]</td><td><code>docker stop</code>; time until Healthchecks.io notifies</td></tr>
+            <tr><td>Monthly running cost</td><td class="placeholder">[TO BE MEASURED]</td><td>Free-tier VM + API/webhook costs + LLM tokens (if enabled)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">All figures come from a measured run and are generated by <code>radar report</code>. No metric on this page is invented. A results table with real numbers lands here once the 7-day run finishes — along with the demo video and public repository links.</p>
+    </div>
+  </section>
+
+  <!-- ============ PRICING / UPCWORK CTA ============ -->
+  <section id="pricing">
+    <div class="container">
+      <p class="section-kicker">Upwork Project Catalog</p>
+      <h2 class="section-title">Hire this as a monitor for your own feeds</h2>
+      <p class="section-lead">Same engine, your sources and your channels. Every tier ships with a README, tests, a short demo video, and is labelled a demo project in the portfolio.</p>
+
+      <div class="offer-grid">
+        <div class="offer">
+          <span class="tier">Starter</span>
+          <h3>One-source monitor</h3>
+          <ul>
+            <li>1 public source watched</li>
+            <li>Discord <em>or</em> Slack alerts</li>
+            <li>Stable-ID dedupe + heartbeat</li>
+            <li>Deployed to your free-tier VM</li>
+            <li>README + handover</li>
+          </ul>
+          <div class="price">Price: [set by freelancer]</div>
+          <div class="delivery">Delivery: 3 days</div>
+        </div>
+        <div class="offer featured">
+          <span class="tier">Standard · most popular</span>
+          <h3>Smart monitor</h3>
+          <ul>
+            <li>Up to 3 sources</li>
+            <li>AI filter with your plain-English criteria</li>
+            <li>Slack + Discord</li>
+            <li>Failure alarm + external dead-man switch</li>
+            <li>7-day verification report from a real run</li>
+          </ul>
+          <div class="price">Price: [set by freelancer]</div>
+          <div class="delivery">Delivery: 5 days</div>
+        </div>
+        <div class="offer">
+          <span class="tier">Advanced</span>
+          <h3>Monitoring suite</h3>
+          <ul>
+            <li>Up to 6 sources, incl. custom public feed adapters</li>
+            <li>Per-channel routing</li>
+            <li>Weekly digest</li>
+            <li>30 days of tuning</li>
+          </ul>
+          <div class="price">Price: [set by freelancer]</div>
+          <div class="delivery">Delivery: 10 days</div>
+        </div>
+      </div>
+
+      <div class="cta-panel">
+        <div>
+          <h3>Evaluating me for a monitoring gig?</h3>
+          <p>Start with the product mockup to see the alert feed, review queue, run log and health status. The public GitHub repository, results report and ≤ 2-min demo video are published with the measured run — ask and I'll send them. Labelled a demo project throughout.</p>
+        </div>
+        <div class="hero-ctas" style="margin:0;">
+          <a class="btn btn-primary" href="demo.html">Open the product mockup</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section id="faq" class="alt">
+    <div class="container">
+      <p class="section-kicker">FAQ</p>
+      <h2 class="section-title">Questions clients actually ask</h2>
+      <div class="faq">
+        <details class="faq-item">
+          <summary>Which sources can it watch?</summary>
+          <p>Any public API or published feed whose terms allow automated access — GitHub releases today, public tender notices or other JSON/RSS feeds through the same adapter interface. It does not log in, bypass paywalls or defeat anti-bot protection.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How fast are alerts?</summary>
+          <p>Latency is bounded by the poll interval (default 30 s, ±3 s jitter) plus posting time. The measured p50/p95 numbers will appear in the results table above once a real run completes — they are placeholders until then.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Will I get duplicates?</summary>
+          <p>No. Each item is recorded by its stable ID in SQLite <em>before</em> alerting, and the alerts table has a unique constraint — one post per item is enforced by the database, across restarts and re-ordered lists alike.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What if it crashes?</summary>
+          <p>systemd restarts the container. If checks keep failing for more than 5 minutes you get a loud @here alarm, and if the whole host dies an external dead-man switch (Healthchecks.io) notices the missing pings and alerts you.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does it need AI?</summary>
+          <p>No. AI filtering is optional and off by default. When enabled it screens items against plain-English criteria, shows the reason for every skip, caches each decision, and fails open so nothing is silently lost.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What does it cost to run?</summary>
+          <p>Infrastructure fits free tiers (free-tier VM, GitHub API, Discord webhooks, Healthchecks.io), so the base system is $0/month. AI cost depends on volume and is measured per item from real token counts — shown in the cost table after the measured run.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can it post to Teams or email?</summary>
+          <p>Notifiers are pluggable; Slack and Discord ship by default. Teams or email adapters are a small addition on request.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <strong>ReleaseRadar</strong> — a demo project for the Upwork portfolio. Not a commercial product; no client data, public or synthetic data only.
+      </div>
+      <div>
+        <a href="demo.html">Product mockup</a> ·
+        <a href="#results">Results (placeholders)</a> ·
+        Results are generated by <code>radar report</code> from a real measured run.
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

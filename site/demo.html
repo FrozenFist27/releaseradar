@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReleaseRadar — product UI mockup (static demo)</title>
+  <meta name="description" content="Static UI mockup of the ReleaseRadar monitor-and-alert product: alert feed, item detail, review queue, run log and health status. Sample data only.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f5fd8'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23fff' stroke-width='2.5' stroke-dasharray='30 12'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Prominent mock warning -->
+  <div class="mock-banner" role="note">
+    <div class="container">
+      <span class="badge badge-mock">UI MOCK-UP</span>
+      <span>Static illustration of the product. Every timestamp, count and latency below is synthetic sample data — not a measurement. Real results are placeholders on the <a href="index.html#results" style="color:inherit; text-decoration:underline;">results page</a> until a measured run completes.</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="logo" aria-hidden="true"></span> ReleaseRadar <span class="badge badge-mock" style="margin-left:6px;">mock</span></a>
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="index.html#how">Architecture</a>
+        <a href="index.html#results">Results</a>
+        <a href="#feed">Alert feed</a>
+        <a href="#health">Health</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container page-intro">
+    <span class="badge badge-sample">Sample data throughout</span>
+    <h1>Inside the product</h1>
+    <p>The operator's view of ReleaseRadar: what a channel sees when something ships, how each item is checked against criteria before it alerts, what the run log records, and how the two-layer health system reports its own state. Buttons and queues are illustrative — nothing here is interactive.</p>
+    <nav class="segmented" aria-label="Mockup sections">
+      <a href="#feed">Alert feed</a>
+      <a href="#detail">Item detail</a>
+      <a href="#queue">Review queue</a>
+      <a href="#ask">Ask with citations</a>
+      <a href="#log">Run log &amp; delivery</a>
+      <a href="#health">Health status</a>
+    </nav>
+  </div>
+
+  <div class="container app-shell">
+
+    <!-- Sidebar -->
+    <aside class="app-side" aria-label="Mock sidebar">
+      <div class="side-title">Watched targets</div>
+      <a href="#feed">astral-sh/uv</a>
+      <a href="#feed">pydantic/pydantic</a>
+      <a href="#feed">fastapi/fastapi</a>
+      <a href="#feed">sandbox/latency-harness</a>
+      <div class="side-title" style="margin-top:14px;">Views</div>
+      <a href="#feed">Alert feed</a>
+      <a href="#queue">Review queue</a>
+      <a href="#log">Run log</a>
+      <a href="#health">Health</a>
+      <div class="side-status">● Watchdog OK<br><span style="font-weight:400;">sample status · mock data</span></div>
+    </aside>
+
+    <!-- Main panels -->
+    <main class="app-main">
+
+      <!-- Status tiles -->
+      <div class="tiles">
+        <div class="tile">
+          <div class="tile-label">Monitor status</div>
+          <div class="tile-value" style="color:var(--ok);">OK</div>
+          <div class="tile-sub">sample state · no failing checks</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Last cycle</div>
+          <div class="tile-value">[SAMPLE]</div>
+          <div class="tile-sub">ago · target interval 30 s</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Alerts (mock day)</div>
+          <div class="tile-value">[SAMPLE]</div>
+          <div class="tile-sub">synthetic feed items shown below</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Duplicate posts</div>
+          <div class="tile-value">0</div>
+          <div class="tile-sub">structurally enforced by UNIQUE(item_key)</div>
+        </div>
+      </div>
+
+      <!-- ALERT FEED -->
+      <section class="panel" id="feed">
+        <div class="panel-head">
+          <h2>#radar-alerts — alert feed</h2>
+          <span class="panel-meta"><span class="badge badge-sample">sample data</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="feed">
+
+            <article class="alert-card">
+              <div class="alert-top">
+                <span class="alert-title"><a href="https://github.com/astral-sh/uv/releases">astral-sh/uv — v0.9.25 · Faster cached-environment restores</a></span>
+                <span class="pill ok">kept · alerted</span>
+              </div>
+              <div class="alert-meta">
+                <span class="pill muted">github_releases:910000001</span>
+                <span>published 14:02:11 UTC</span>
+                <span>detected 14:02:26 UTC</span>
+                <span class="pill warn">latency [sample] s</span>
+              </div>
+              <div class="alert-summary"><strong>AI summary:</strong> Cache restores now skip unchanged entries; no breaking changes noted in the release body. <em>(synthetic sample text)</em></div>
+            </article>
+
+            <article class="alert-card">
+              <div class="alert-top">
+                <span class="alert-title"><a href="https://github.com/pydantic/pydantic/releases">pydantic/pydantic — v2.12.4 · Bug fixes</a></span>
+                <span class="pill ok">kept · alerted</span>
+              </div>
+              <div class="alert-meta">
+                <span class="pill muted">github_releases:910000002</span>
+                <span>published 09:47:03 UTC</span>
+                <span>detected 09:47:19 UTC</span>
+                <span class="pill warn">latency [sample] s</span>
+              </div>
+              <div class="alert-summary"><strong>AI summary:</strong> Maintenance release: validation edge cases in <code>TypeAdapter</code> fixed. <em>(synthetic sample text)</em></div>
+            </article>
+
+            <article class="alert-card skipped">
+              <div class="alert-top">
+                <span class="alert-title"><a href="https://github.com/fastapi/fastapi/releases">fastapi/fastapi — 0.121.1 · Docs refresh</a></span>
+                <span class="pill warn">skipped by filter</span>
+              </div>
+              <div class="alert-meta">
+                <span class="pill muted">github_releases:910000003</span>
+                <span>published 08:15:40 UTC</span>
+                <span>reason: no security fix, no breaking change</span>
+              </div>
+              <div class="alert-summary">Visible in the review queue with its reason — skipped items are never silently dropped. <em>(synthetic sample text)</em></div>
+            </article>
+
+            <article class="alert-card">
+              <div class="alert-top">
+                <span class="alert-title"><a href="https://github.com/astral-sh/uv/releases">astral-sh/uv — v0.9.24 · Python 3.14 support</a></span>
+                <span class="pill muted">already alerted · not repeated</span>
+              </div>
+              <div class="alert-meta">
+                <span class="pill muted">github_releases:909999998</span>
+                <span>published yesterday 16:31 UTC</span>
+                <span>re-fetched today 4× → 4× "already seen"</span>
+              </div>
+              <div class="alert-summary">Same item re-fetched after restart and list re-order — the stable ID keeps it from posting twice. <em>(illustrative)</em></div>
+            </article>
+
+          </div>
+        </div>
+        <div class="panel-note">What the Slack/Discord webhook actually posts. Latency figures are placeholders inside sample data; measured p50/p95 come from <code>radar report</code> after a real run.</div>
+      </section>
+
+      <!-- ITEM DETAIL -->
+      <section class="panel" id="detail">
+        <div class="panel-head">
+          <h2>Item detail — extracted fields</h2>
+          <span class="panel-meta"><span class="badge badge-sample">sample data</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="fields">
+            <div><div class="f-key">item_key</div><div class="f-val">github_releases:910000001</div></div>
+            <div><div class="f-key">target</div><div class="f-val">astral-sh/uv</div></div>
+            <div><div class="f-key">tag_name</div><div class="f-val">v0.9.25</div></div>
+            <div><div class="f-key">title</div><div class="f-val">Faster cached-environment restores</div></div>
+            <div><div class="f-key">author</div><div class="f-val">sample-author</div></div>
+            <div><div class="f-key">published_at (UTC)</div><div class="f-val">14:02:11 · sample</div></div>
+            <div><div class="f-key">prerelease</div><div class="f-val">false</div></div>
+            <div><div class="f-key">detected_at (UTC)</div><div class="f-val">14:02:26 · sample</div></div>
+            <div><div class="f-key">url</div><div class="f-val"><a href="https://github.com/astral-sh/uv/releases">github.com/astral-sh/uv/releases</a></div></div>
+            <div><div class="f-key">baseline</div><div class="f-val">false (not a first-run item)</div></div>
+          </div>
+          <p class="note"><strong>Body excerpt (first 1,500 chars, shown to the filter):</strong> "This release improves cached-environment restores by skipping unchanged entries… <em>(synthetic sample text — no real release content is reproduced here)</em>"</p>
+        </div>
+        <div class="panel-note">Normalizer output for one item: everything downstream (dedupe, filter, alert) works only from these fields and the stable ID.</div>
+      </section>
+
+      <!-- REVIEW QUEUE -->
+      <section class="panel" id="queue">
+        <div class="panel-head">
+          <h2>Review queue — filter decisions</h2>
+          <span class="panel-meta"><span class="badge badge-sample">sample data</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="queue">
+            <div class="queue-row">
+              <div>
+                <div class="q-title">astral-sh/uv — v0.9.25 <span class="pill ok">keep</span></div>
+                <div class="q-meta">"mentions performance fix; breaking-change check clean" · model: claude-haiku (sample) · cached per item_key</div>
+              </div>
+              <div class="q-actions">
+                <span class="q-btn" title="static mockup">✓ Approved (auto)</span>
+                <span class="q-btn" title="static mockup">Skip</span>
+              </div>
+            </div>
+            <div class="queue-row">
+              <div>
+                <div class="q-title">fastapi/fastapi — 0.121.1 <span class="pill warn">skip</span></div>
+                <div class="q-meta">"docs-only release; criteria ask for security or breaking changes" · model: claude-haiku (sample) · reason ≤ 200 chars</div>
+              </div>
+              <div class="q-actions">
+                <span class="q-btn" title="static mockup">Keep instead</span>
+                <span class="q-btn" title="static mockup">Confirmed skip</span>
+              </div>
+            </div>
+            <div class="queue-row">
+              <div>
+                <div class="q-title">sandbox/latency-harness — v20261016-1402 <span class="pill ok">keep</span> <span class="pill muted">no filter configured</span></div>
+                <div class="q-meta">Filter is off by default → fail-open path: alert everything, mark "unfiltered"</div>
+              </div>
+              <div class="q-actions">
+                <span class="q-btn" title="static mockup">✓ Sent</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-note">Optional AI filtering: every decision is stored once per item, a skip always carries a visible reason, and parse/timeout failures fail open (keep). Criteria are plain English, set in <code>config.yaml</code>.</div>
+      </section>
+
+      <!-- ASK / CHAT WITH CITATIONS -->
+      <section class="panel" id="ask">
+        <div class="panel-head">
+          <h2>Ask about an alert</h2>
+          <span class="panel-meta"><span class="badge badge-sample">sample conversation</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="chat">
+            <div class="bubble user">Why was the fastapi release skipped?</div>
+            <div class="bubble bot">
+              It didn't match your criteria ("security fixes, breaking changes, or new major features"): the release body is a documentation refresh, so the filter returned <code>keep=false</code> with the reason stored in <code>filter_decisions</code>.
+              <div><span class="cite">src: github_releases:910000003 · fastapi/fastapi@0.121.1</span></div>
+              <div><span class="cite">criteria: config.yaml → filter.criteria</span></div>
+            </div>
+            <div class="bubble user">Did anything alert in the last hour?</div>
+            <div class="bubble bot">
+              Two items were posted to #radar-alerts in the sample window; one was skipped by the filter and stays visible in the review queue.
+              <div><span class="cite">src: alerts table (sample rows)</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-note">Illustrative Q&amp;A over the monitor's own logged decisions — answers cite the stored decision and the source item rather than inventing facts.</div>
+      </section>
+
+      <!-- RUN LOG & DELIVERY -->
+      <section class="panel" id="log">
+        <div class="panel-head">
+          <h2>Run log &amp; delivery</h2>
+          <span class="panel-meta"><span class="badge badge-sample">sample log</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="runlog" aria-label="Sample run log"><span class="lvl-info">{"ts":"14:02:01","ev":"cycle_start","cycle":"a1b2…","targets":4}</span>
+<span class="lvl-info">{"ts":"14:02:03","target":"pydantic/pydantic","status":"not_modified","http":304,"rate_remaining":4987}</span>
+<span class="lvl-info">{"ts":"14:02:04","target":"fastapi/fastapi","status":"not_modified","http":304}</span>
+<span class="lvl-ok">  {"ts":"14:02:26","target":"astral-sh/uv","status":"ok","http":200,"new_items":1}</span>
+<span class="lvl-ok">  {"ts":"14:02:26","ev":"dedupe_insert","item":"github_releases:910000001","inserted":1}</span>
+<span class="lvl-warn">{"ts":"14:02:27","ev":"filter_decision","item":"github_releases:910000003","keep":false,"reason":"docs-only"}</span>
+<span class="lvl-ok">  {"ts":"14:02:28","ev":"alert_posted","channel":"discord","http":204,"item":"github_releases:910000001","latency_s":"[sample]"}</span>
+<span class="lvl-ok">  {"ts":"14:02:29","ev":"hc_ping","http":200}</span>
+<span class="lvl-err">{"ts":"14:09:01","target":"sandbox/…","status":"error","error":"connect timeout","attempt":1}</span>
+<span class="lvl-warn">{"ts":"14:14:01","ev":"watchdog","state":"failing","silent_for_s":301,"action":"loud_alert"}</span>
+<span class="lvl-ok">  {"ts":"14:15:31","ev":"recovery","after_s":390,"action":"recovery_msg + hc_ping"}</span></div>
+
+          <h3 style="font-size:0.95rem; margin:18px 0 8px;">Pending delivery (at-least-once, at-most-once recorded)</h3>
+          <div class="queue">
+            <div class="queue-row">
+              <div>
+                <div class="q-title">github_releases:910000005 — sandbox/latency-harness <span class="pill danger">retrying</span></div>
+                <div class="q-meta">attempt 2/5 · last error: Discord 429, retry_after honored (sample) · stays in <code>pending_alerts</code> until posted</div>
+              </div>
+              <div class="q-actions"><span class="q-btn" title="static mockup">Retried next cycle</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-note">JSON-lines log (also mirrored to the SQLite <code>checks</code> table). A crash between "seen" and "posted" replays <code>pending_alerts</code>; the UNIQUE key on <code>alerts</code> still permits only one recorded post.</div>
+      </section>
+
+      <!-- HEALTH STATUS -->
+      <section class="panel" id="health">
+        <div class="panel-head">
+          <h2>Health status — two-layer watchdog</h2>
+          <span class="panel-meta"><span class="badge badge-sample">sample state</span></span>
+        </div>
+        <div class="panel-body">
+          <div class="health-grid">
+            <div class="health-row"><span class="h-label">Internal watchdog</span> <span class="pill ok">quiet · checks passing</span></div>
+            <div class="health-row"><span class="h-label">Consecutive failures</span> <span class="pill muted">0 · threshold 5 min</span></div>
+            <div class="health-row"><span class="h-label">Last heartbeat (#radar-health)</span> <span class="pill warn">[SAMPLE] ago</span></div>
+            <div class="health-row"><span class="h-label">Healthchecks.io ping</span> <span class="pill ok">last ping [SAMPLE]</span></div>
+            <div class="health-row"><span class="h-label">On failure &gt; 5 min</span> <span class="pill danger">@here loud alert</span></div>
+            <div class="health-row"><span class="h-label">On host death</span> <span class="pill danger">external dead-man alerts</span></div>
+          </div>
+        </div>
+        <div class="panel-note">A monitor cannot report its own death, so two independent layers exist: an internal watchdog for failing checks and an external dead-man switch for a dead process or host. Times above are sample values.</div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div><strong>ReleaseRadar</strong> — demo project. This page is a static UI mockup with synthetic sample data; it performs no network requests and stores nothing.</div>
+      <div><a href="index.html">Home</a> · <a href="index.html#results">Results (placeholders)</a></div>
+    </div>
+  </footer>
+
+</body>
+</html>

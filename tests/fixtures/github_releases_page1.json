@@ -1,0 +1,50 @@
+[
+  {
+    "id": 101,
+    "tag_name": "v1.0.0",
+    "name": "v1.0.0",
+    "html_url": "https://github.com/octo/repo/releases/tag/v1.0.0",
+    "published_at": "2026-01-01T00:00:00Z",
+    "created_at": "2026-01-01T00:00:00Z",
+    "draft": false,
+    "prerelease": false,
+    "user": { "login": "octo" },
+    "body": "First stable release."
+  },
+  {
+    "id": 102,
+    "tag_name": "v1.1.0",
+    "name": "v1.1.0",
+    "html_url": "https://github.com/octo/repo/releases/tag/v1.1.0",
+    "published_at": "2026-01-05T00:00:00Z",
+    "created_at": "2026-01-05T00:00:00Z",
+    "draft": false,
+    "prerelease": false,
+    "user": { "login": "octo" },
+    "body": "Adds feature B."
+  },
+  {
+    "id": 103,
+    "tag_name": "v2.0.0-beta",
+    "name": "v2.0.0-beta",
+    "html_url": "https://github.com/octo/repo/releases/tag/v2.0.0-beta",
+    "published_at": "2026-01-06T00:00:00Z",
+    "created_at": "2026-01-06T00:00:00Z",
+    "draft": false,
+    "prerelease": true,
+    "user": { "login": "octo" },
+    "body": "Beta."
+  },
+  {
+    "id": 104,
+    "tag_name": "v9.9.9",
+    "name": "Draft",
+    "html_url": "https://github.com/octo/repo/releases/tag/v9.9.9",
+    "published_at": "2026-01-07T00:00:00Z",
+    "created_at": "2026-01-07T00:00:00Z",
+    "draft": true,
+    "prerelease": false,
+    "user": { "login": "octo" },
+    "body": "Draft, should be skipped."
+  }
+]

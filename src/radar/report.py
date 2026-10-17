@@ -22,7 +22,45 @@ def _percentile(sorted_vals: list[float], p: float) -> float:
     return sorted_vals[f] + (sorted_vals[c] - sorted_vals[f]) * (k - f)
 
 
-def compute_report(db_path: str | Path) -> dict:
+def audit_duplicate_posts(log_dir: str | Path | None) -> int | None:
+    """Independent duplicate audit: count `alert_sent` log lines per item_key (>1 = duplicate).
+
+    Returns None when there are no logs to audit.
+    """
+    if log_dir is None or not Path(log_dir).is_dir():
+        return None
+    counts: dict[str, int] = {}
+    seen_any = False
+    for f in sorted(Path(log_dir).glob("radar-*.jsonl")):
+        for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+            if '"alert_sent"' not in line:
+                continue
+            try:
+                d = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if d.get("event") == "alert_sent" and d.get("item_key"):
+                seen_any = True
+                counts[d["item_key"]] = counts.get(d["item_key"], 0) + 1
+    if not seen_any:
+        return None
+    return sum(c - 1 for c in counts.values() if c > 1)
+
+
+def _cycle_stats(conn) -> dict:
+    rows = conn.execute(
+        "SELECT cycle_id, MIN(started_at) t FROM checks GROUP BY cycle_id ORDER BY t"
+    ).fetchall()
+    ts = [datetime.fromisoformat(r["t"]) for r in rows]
+    gaps = [(b - a).total_seconds() for a, b in zip(ts, ts[1:], strict=False)]
+    return {
+        "cycles": len(ts),
+        "max_gap_s": round(max(gaps), 1) if gaps else 0.0,
+        "gaps_over_120s": sum(1 for g in gaps if g > 120),
+    }
+
+
+def compute_report(db_path: str | Path, log_dir: str | Path | None = None) -> dict:
     conn = connect(db_path)
     try:
         total_checks = conn.execute("SELECT COUNT(*) n FROM checks").fetchone()["n"]
@@ -45,6 +83,8 @@ def compute_report(db_path: str | Path) -> dict:
         last = conn.execute("SELECT MAX(started_at) t FROM checks").fetchone()["t"]
 
         uptime = (ok_checks / total_checks * 100) if total_checks else 0.0
+        cyc = _cycle_stats(conn)
+        log_dups = audit_duplicate_posts(log_dir)
 
         # LLM filter token spend
         tok = conn.execute(
@@ -64,7 +104,12 @@ def compute_report(db_path: str | Path) -> dict:
             "items_seen": seen,
             "baseline_items": baseline,
             "alerts_count": len(alerts),
-            "duplicate_alerts": 0,
+            "cycles": cyc["cycles"],
+            "max_gap_s": cyc["max_gap_s"],
+            "gaps_over_120s": cyc["gaps_over_120s"],
+            # alerts.item_key is a PRIMARY KEY (0 by construction); the log audit is independent.
+            "duplicate_alerts": log_dups if log_dups is not None else 0,
+            "duplicate_audit": "log_scan" if log_dups is not None else "primary_key_only",
             "latency": {
                 "n": len(latencies),
                 "p50_s": round(_percentile(latencies, 0.50), 3),
@@ -98,11 +143,13 @@ def to_markdown(r: dict) -> str:
         f"| Total checks | {r['total_checks']} |",
         f"| Successful checks | {r['ok_checks']} |",
         f"| Error checks | {r['error_checks']} |",
-        f"| Uptime | {r['uptime_pct']}% |",
+        f"| Check success rate | {r['uptime_pct']}% |",
+        f"| Cycles (full polls) | {r['cycles']} |",
+        f"| Max gap between cycles | {r['max_gap_s']} s ({r['gaps_over_120s']} gaps over 120 s) |",
         f"| Items seen | {r['items_seen']} |",
         f"| Baseline items (first run, not alerted) | {r['baseline_items']} |",
         f"| Alerts sent | {r['alerts_count']} |",
-        f"| Duplicate alerts | {r['duplicate_alerts']} |",
+        f"| Duplicate alerts ({r['duplicate_audit']}) | {r['duplicate_alerts']} |",
         f"| Latency n | {lat['n']} |",
         f"| Latency p50 | {lat['p50_s']} s |",
         f"| Latency p95 | {lat['p95_s']} s |",
@@ -115,10 +162,10 @@ def to_markdown(r: dict) -> str:
     return "\n".join(lines)
 
 
-def write_report(db_path: str | Path, out_dir: str | Path) -> tuple[Path, Path]:
+def write_report(db_path: str | Path, out_dir: str | Path, log_dir: str | Path | None = None) -> tuple[Path, Path]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    r = compute_report(db_path)
+    r = compute_report(db_path, log_dir)
     (out / "results.json").write_text(json.dumps(r, indent=2), encoding="utf-8")
     (out / "results.md").write_text(to_markdown(r), encoding="utf-8")
     return out / "results.md", out / "results.json"

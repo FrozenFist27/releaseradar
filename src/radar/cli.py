@@ -63,16 +63,17 @@ def report(
     config: str = typer.Option(None),
     out: str = typer.Option("docs", help="Output directory"),
     as_json: bool = typer.Option(False, "--json", help="Print JSON only"),
+    log_dir: str = typer.Option("data/logs", help="JSONL logs for the duplicate audit"),
 ):
     """Compute metrics from the DB and write docs/results.{md,json}."""
     cfg = load_config(config)
-    r = compute_report(cfg.db_path)
+    r = compute_report(cfg.db_path, log_dir)
     if as_json:
         import json as _json
 
         typer.echo(_json.dumps(r, indent=2))
         return
-    write_report(cfg.db_path, out)
+    write_report(cfg.db_path, out, log_dir)
     typer.echo(to_markdown(r))
 
 

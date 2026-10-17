@@ -48,7 +48,7 @@ def setup_logging(log_dir: str | Path = "data/logs", level: str = "INFO") -> Pat
         wrapper_class=structlog.make_filtering_bound_logger(
             getattr(logging, level.upper(), logging.INFO)
         ),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+        logger_factory=structlog.stdlib.LoggerFactory(),  # -> root handlers: stdout + daily file
         cache_logger_on_first_use=True,
     )
     return file_path

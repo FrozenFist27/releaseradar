@@ -1,0 +1,30 @@
+{"title": "v0.8.3", "body": "Improve error message wording when a file is missing.", "label": "skip"}
+{"title": "v2.3.5", "body": "Translation updates for Spanish and German docs.", "label": "skip"}
+{"title": "2026.10.1", "body": "Security fix: tokens were written to debug logs in some error paths. Rotate affected tokens.", "label": "keep"}
+{"title": "v9.0.0", "body": "Major version. Removes the legacy v1 REST endpoints; clients must move to /v2.", "label": "keep"}
+{"title": "v6.1.0", "body": "New major feature: native Postgres 17 support and a new query planner that changes default behaviour.", "label": "keep"}
+{"title": "v5.0.1", "body": "Documentation: add more examples to the tutorial section.", "label": "skip"}
+{"title": "v4.2.1", "body": "Internal refactor of the logging module; no behaviour change.", "label": "skip"}
+{"title": "v3.8.1", "body": "Add type hints to a few internal functions.", "label": "skip"}
+{"title": "v0.20.0", "body": "BREAKING: the on-disk index format changed; a one-time reindex is required before upgrade.", "label": "keep"}
+{"title": "v1.9.1", "body": "Bump dev dependency versions and reformat code with the latest linter.", "label": "skip"}
+{"title": "2026.10.2", "body": "Update copyright year in headers and rename some internal variables.", "label": "skip"}
+{"title": "v0.20.1", "body": "Fix a cosmetic misalignment in --help output.", "label": "skip"}
+{"title": "v4.2.0", "body": "Adds first-class async support across the whole public API, the headline feature of this release.", "label": "keep"}
+{"title": "v1.4.7", "body": "Security: patches a denial-of-service via crafted multipart bodies (CVE-2026-4012).", "label": "keep"}
+{"title": "v1.0.0", "body": "First stable release. Introduces the distributed job scheduler, a major new capability.", "label": "keep"}
+{"title": "v1.4.8", "body": "Fix a typo in a log line and clarify a code comment.", "label": "skip"}
+{"title": "v3.0.0", "body": "BREAKING: removes the deprecated `Client.fetch()` API; configuration keys are renamed. See migration guide.", "label": "keep"}
+{"title": "v9.0.1", "body": "Chore: remove unused imports and bump the changelog template.", "label": "skip"}
+{"title": "v3.0.1", "body": "Fixes a flaky unit test on Windows CI. No user-facing changes.", "label": "skip"}
+{"title": "v6.1.1", "body": "Minor performance tweak to a rarely used helper; 2% faster in microbenchmarks.", "label": "skip"}
+{"title": "v2.14.1", "body": "Security: fixes CVE-2026-1001, a path traversal in the static file handler. Upgrade recommended.", "label": "keep"}
+{"title": "v7.0.1", "body": "Fix off-by-one in a progress bar display.", "label": "skip"}
+{"title": "v1.9.0", "body": "New major feature: built-in plugin system with hot-reload and a stable extension API.", "label": "keep"}
+{"title": "v5.0.0-final", "body": "Major release. Drops Python 3.9 support. Default serializer changed, which breaks existing cached data.", "label": "keep"}
+{"title": "v2.14.2", "body": "Fix typo in the README and update the contributor list.", "label": "skip"}
+{"title": "v3.8.0", "body": "Adds end-to-end encryption for all stored secrets (major feature). Old plaintext mode is removed.", "label": "keep"}
+{"title": "v1.0.1", "body": "CI: switch the build matrix to a newer runner image.", "label": "skip"}
+{"title": "v0.8.2", "body": "Patch release addressing a remote code execution vulnerability in the YAML loader (CVE-2026-2210).", "label": "keep"}
+{"title": "v2.3.4", "body": "Fixes an authentication bypass when the proxy header is set (CVE-2026-3344). Critical.", "label": "keep"}
+{"title": "v7.0.0", "body": "Breaking change: the CLI flag --out is now --output. Exit codes were renumbered.", "label": "keep"}

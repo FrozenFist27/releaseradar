@@ -59,3 +59,31 @@ def test_compute_report_from_seeded_db(tmp_path):
     assert r["latency"]["p50_s"] == 15.0
     assert r["latency"]["max_s"] == 25.0
     assert r["uptime_pct"] == 87.5
+
+
+def test_log_audit_detects_duplicate_posts(tmp_path):
+    from radar.report import audit_duplicate_posts
+
+    assert audit_duplicate_posts(tmp_path) is None
+    (tmp_path / "radar-2026-01-01.jsonl").write_text(
+        '{"event": "alert_sent", "item_key": "a"}\n'
+        '{"event": "alert_sent", "item_key": "b"}\n'
+        '{"event": "alert_sent", "item_key": "a"}\n'
+        '{"event": "check"}\n',
+        encoding="utf-8",
+    )
+    assert audit_duplicate_posts(tmp_path) == 1
+
+
+def test_cycle_stats_max_gap(tmp_path):
+    from datetime import timedelta
+
+    conn = connect(tmp_path / "r.db")
+    t0 = datetime(2026, 1, 1, tzinfo=UTC)
+    for i, off in enumerate([0, 30, 60, 560]):
+        record_check(conn, CheckResult(cycle_id=f"c{i}", target="x", started_at=t0 + timedelta(seconds=off),
+                                       duration_ms=1, status="ok"))
+    conn.commit()
+    conn.close()
+    r = compute_report(tmp_path / "r.db")
+    assert r["cycles"] == 4 and r["max_gap_s"] == 500.0 and r["gaps_over_120s"] == 1

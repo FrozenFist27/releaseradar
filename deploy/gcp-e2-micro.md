@@ -2,99 +2,77 @@
 
 Target: project `upwork-sambudh`, instance `releaseradar`, zone `us-central1-a`,
 Debian 12, Python 3.11, 969 MB RAM. Stays inside the free tier (e2-micro in
-us-central1, 30 GB pd-standard, standard network tier, no static IP).
+us-central1, 30 GB pd-standard, ephemeral IP, no static IP, no extra disks).
 
-On this Windows machine set the SDK's bundled Python first:
+On Windows set the SDK's bundled Python first:
 
 ```bash
 export CLOUDSDK_PYTHON="C:/Program Files (x86)/Google/Cloud SDK/google-cloud-sdk/platform/bundledpython/python.exe"
+G="gcloud compute --project=upwork-sambudh"
 ```
 
-## 1. One-time VM prep (swap + dirs)
+## Design: systemd service + timer
+
+* `radar-check.service` (oneshot) runs `radar once` = one full poll cycle, then exits.
+* `radar-check.timer` fires it every 30 s (`OnUnitActiveSec=30s`).
+* All cross-cycle state (ETags, seen-set, watchdog, heartbeat clock, backoff) lives in
+  SQLite, so one-shot processes behave exactly like a long-running loop.
+* `radar-publisher.timer` (optional) publishes a synthetic release in the sandbox repo every
+  ~2 h; this is the latency harness.
+* Stopping `radar-check.timer` is the outage drill: pings stop, Healthchecks.io alerts.
+
+## 1. Package, copy code and secrets
 
 ```bash
-gcloud compute ssh releaseradar --zone=us-central1-a --quiet --command="
-  set -e
-  # 1 GB swapfile (the box has only 969 MB RAM)
-  sudo fallocate -l 1G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
-  sudo chmod 600 /swapfile
-  sudo mkswap /swapfile >/dev/null
-  sudo swapon /swapfile
-  grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-  sudo useradd --system --shell /usr/sbin/nologin radar || true
-  sudo mkdir -p /opt/releaseradar /etc/releaseradar.env.d
-  sudo chown -R radar: /opt/releaseradar
-  python3 --version
-"
+tar czf /tmp/radar-src.tgz --exclude=__pycache__ --exclude='*.egg-info' \
+  src pyproject.toml README.md config.yaml deploy scripts
+$G scp --zone=us-central1-a --quiet /tmp/radar-src.tgz deploy/vm-setup.sh .env releaseradar:/tmp/
+# secrets: local .env -> /etc/releaseradar.env (root, chmod 600). Never echo values.
+$G ssh releaseradar --zone=us-central1-a --quiet --command="
+  sudo mv /tmp/.env /etc/releaseradar.env &&
+  sudo chown root:root /etc/releaseradar.env && sudo chmod 600 /etc/releaseradar.env"
 ```
 
-## 2. Copy the code and secrets
-
-From the project root on your machine:
+## 2. One-time VM setup (1 GB swapfile, radar user, venv under /opt/releaseradar)
 
 ```bash
-# code ( excludes .env, data/, venv )
-gcloud compute scp --recurse --zone=us-central1-a --quiet \
-  src pyproject.toml config.yaml deploy \
-  releaseradar:~/releaseradar-src/
-
-# secrets: local .env -> /etc/releaseradar.env (chmod 600). Never echo values.
-gcloud compute scp --zone=us-central1-a --quiet .env releaseradar:/tmp/radar.env
-gcloud compute ssh releaseradar --zone=us-central1-a --quiet --command="
-  sudo mv /tmp/radar.env /etc/releaseradar.env
-  sudo chmod 600 /etc/releaseradar.env
-  sudo chown root:root /etc/releaseradar.env
-"
+$G ssh releaseradar --zone=us-central1-a --quiet --command="bash /tmp/vm-setup.sh"
 ```
 
-## 3. Install into /opt with a venv
+`deploy/vm-setup.sh` is idempotent enough to re-run for upgrades (it re-extracts the
+tarball and `pip install`s into the venv).
+
+## 3. Enable the timers
 
 ```bash
-gcloud compute ssh releaseradar --zone=us-central1-a --quiet --command="
-  set -e
-  sudo apt-get update -qq
-  sudo apt-get install -y -qq python3-venv python3-pip >/dev/null
-  cd /opt/releaseradar
-  sudo rsync -a ~/releaseradar-src/ /opt/releaseradar/
-  sudo python3 -m venv /opt/releaseradar/.venv
-  sudo /opt/releaseradar/.venv/bin/pip install --quiet --upgrade pip
-  sudo /opt/releaseradar/.venv/bin/pip install --quiet .
-  sudo chown -R radar: /opt/releaseradar
-"
+$G ssh releaseradar --zone=us-central1-a --quiet --command="
+  sudo cp /opt/releaseradar/deploy/radar-*.service /opt/releaseradar/deploy/radar-*.timer /etc/systemd/system/ &&
+  sudo systemctl daemon-reload &&
+  sudo systemctl start radar-check.service &&          # first run baselines existing releases
+  sudo systemctl enable --now radar-check.timer radar-publisher.timer"
 ```
 
-## 4. systemd service + timer
-
-ReleaseRadar is a long-running loop, so a **service** with `Restart=always` is
-the right unit. (A timer is used only for the optional latency-harness publisher.)
+## 4. Verify / read logs
 
 ```bash
-gcloud compute ssh releaseradar --zone=us-central1-a --quiet --command="
-  set -e
-  sudo cp /opt/releaseradar/deploy/radar.service /etc/systemd/system/radar.service
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now radar
-  sleep 3
-  systemctl is-active radar
-  sudo journalctl -u radar -n 20 --no-pager
-"
+$G ssh releaseradar --zone=us-central1-a --quiet --command="
+  systemctl list-timers --no-pager | grep radar;
+  sudo journalctl -u radar-check -n 20 --no-pager"
 ```
 
-## 5. Verify
+Every check is a JSON line (`"event": "check"`) in the journal and in
+`/opt/releaseradar/data/logs/radar-<date>.jsonl`, and a row in the `checks` table.
+
+## 5. Outage drill
 
 ```bash
-gcloud compute ssh releaseradar --zone=us-central1-a --quiet --command="
-  sudo journalctl -u radar -f -n 0
-"
+$G ssh releaseradar ... --command="sudo systemctl stop radar-check.timer"   # note the time
+# Healthchecks.io (period 1 min + grace 5 min) marks the check DOWN ~6 min after the last ping
+$G ssh releaseradar ... --command="sudo systemctl start radar-check.timer"
 ```
 
-You should see JSON log lines (`scheduler_start`, per-target HTTP 200/304) and a
-Healthchecks.io ping every cycle. Logs also land in `/opt/releaseradar/data/logs/radar-<date>.jsonl`.
+## Free-tier checklist
 
-## Staying in the free tier
-
-- Region `us-central1-a` (us-central1 is Always-Free eligible).
-- Machine type `e2-micro` (shared core, 1 GB RAM) — free per month.
-- 30 GB `pd-standard` boot disk — free per month.
-- No static external IP assigned beyond the ephemeral one (ephemeral is free).
-- No extra disks, no GPUs, no load balancers.
+- Region `us-central1-a`, machine `e2-micro`, 30 GB `pd-standard` boot disk.
+- No static IP, no extra disks, no load balancer, no Cloud NAT.
+- Egress is a few MB/day (JSON polls + Discord posts).

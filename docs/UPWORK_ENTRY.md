@@ -1,38 +1,37 @@
 # Upwork portfolio entry (label: DEMO PROJECT)
 
-> This is a demo project built to showcase a repeatable skill. It is not a live
-> client engagement. All figures come from a real measured run on public/synthetic data.
+> Demo project built to showcase a repeatable skill. Not a live client engagement. All figures come
+> from real runs on public/synthetic data; the 7-day figures are pending (run started 2026-10-17T16:42Z).
 
-**Title:** ReleaseRadar — Monitor & Alert Bot with Zero-Duplicate Alerts (Demo Project)
+**Title:** ReleaseRadar - Monitor & Alert Bot with Zero-Duplicate Alerts (Demo Project)
 
 **Description:**
 
-Demo project. A small, production-style monitor that watches public sources (GitHub
-releases; optionally UK public tender notices) and posts only genuinely new items to
-Discord or Slack within a minute. Items are tracked by stable ID, so reordered, edited
-or re-shared entries never alert twice. An optional AI filter (Claude Haiku) screens
-items against plain-English criteria and adds a one-line summary. A two-layer health
-system posts heartbeats, raises a loud alert if checks fail for 5+ minutes, and an
-external dead-man switch (Healthchecks.io) alerts if the host dies.
+Demo project. A small, production-style monitor that watches public sources (GitHub releases) and posts
+only genuinely new items to Discord within a minute. Items are tracked by stable ID in SQLite, so
+reordered, edited or re-shared entries never alert twice. A health layer posts heartbeats, raises a loud
+`@here` alert if checks fail for 5+ minutes, and an external dead-man switch (Healthchecks.io) alerts if the
+host dies. Runs as a systemd timer on a free-tier GCP VM. An optional Claude Haiku filter is implemented
+(unit-tested; live evaluation pending a valid API key).
 
-Measured (real run, public/synthetic data only):
-- Publish-to-alert latency: p50 ~8.4 s, p95 ~9.3 s, max 9.4 s (n=5 sandbox releases)
-- Sampled window: 40 checks, 100% success, 0 duplicate alerts
-- AI filter: correct keep/skip on a 3-case set; ~165 input + ~80 output tokens per item
-- Running cost: $0 infra (GCP Always-Free e2-micro + GitHub + Discord + Healthchecks.io free tier) + a fraction of a cent of LLM tokens per item
+Measured so far (VM, 26-minute window, 2026-10-17):
+- 148 checks, 0 errors; 13 sandbox releases alerted exactly once each (0 duplicates, audited from the DB and the journal)
+- Publish-to-alert latency: p50 16.4 s, p95 27.5 s, max 27.6 s (30 s polling)
+- Simulated outage -> loud alert after 316 s; VM stopped -> Healthchecks.io down after ~6 min
+- Running cost: $0 infrastructure; no LLM spend measured
+- 7-day unattended result: `[PENDING - fill from docs/results.md after 2026-10-24]`
 
-Stack: Python 3.11/3.12, httpx, SQLite, Discord webhooks, Healthchecks.io, Anthropic
-claude-haiku-5-5 (optional filter), Docker, systemd, GCP free tier.
+Stack: Python 3.11, httpx, SQLite, Discord webhooks, Healthchecks.io, systemd timers, Docker, GCP free tier.
 
-**Skills tags:** Python, API Integration, Automation, Monitoring, Web Scraping, Discord Bot, Slack, LLM, SQLite, Docker.
+**Skills tags:** Python, API Integration, Automation, Monitoring, Web Scraping, Discord Bot, SQLite, Docker, LLM.
 
-**Media to attach:** demo video (<=2 min, see docs/VIDEO_SCRIPT.md), architecture diagram, Discord alert screenshot, results table.
+**Media to attach:** demo video (<=2 min, docs/VIDEO_SCRIPT.md), architecture diagram, Discord alert
+screenshot, results table.
 
 ## What this demonstrates to a client
 
-- Official APIs + conditional requests (polite, rate-limit-aware polling) — not brittle HTML scraping.
-- Database-enforced exactly-once alerting (stable-ID dedupe + PRIMARY KEY guard).
-- Restart-safe state, at-least-once delivery with a pending queue.
-- Two-layer observability: internal watchdog + external dead-man switch.
-- Optional LLM filtering that fails open, with token/cost accounting.
-- Real measured numbers, not marketing claims.
+- Official APIs + conditional requests (polite, rate-limit-aware) rather than brittle HTML scraping.
+- Database-enforced exactly-once alerting (stable-ID dedupe + PRIMARY KEY guard) with an independent log audit.
+- Restart-safe state; every poll is a fresh process and nothing is lost or repeated.
+- Two-layer observability: internal watchdog + external dead-man switch, both drilled for real.
+- Honest reporting: pending items are labelled as pending.

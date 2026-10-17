@@ -1,22 +1,24 @@
 # ReleaseRadar — measured run report
 
-Generated: 2026-10-17T13:35:35.553026+00:00
-Run window: 2026-10-17T13:25:23.095806+00:00 -> 2026-10-17T13:27:24.736078+00:00
+Generated: 2026-10-17T17:08:56.018701+00:00
+Run window: 2026-10-17T16:42:04.473419+00:00 -> 2026-10-17T17:08:37.549794+00:00
 
 | Metric | Value |
 |---|---|
-| Total checks | 40 |
-| Successful checks | 40 |
+| Total checks | 148 |
+| Successful checks | 148 |
 | Error checks | 0 |
-| Uptime | 100.0% |
-| Items seen | 33 |
-| Baseline items (first run, not alerted) | 28 |
-| Alerts sent | 5 |
-| Duplicate alerts | 0 |
-| Latency n | 5 |
-| Latency p50 | 8.367 s |
-| Latency p95 | 9.277 s |
-| Latency max | 9.41 s |
+| Check success rate | 100.0% |
+| Cycles (full polls) | 37 |
+| Max gap between cycles | 507.2 s (1 gaps over 120 s) |
+| Items seen | 46 |
+| Baseline items (first run, not alerted) | 33 |
+| Alerts sent | 13 |
+| Duplicate alerts (primary_key_only) | 0 |
+| Latency n | 13 |
+| Latency p50 | 16.44 s |
+| Latency p95 | 27.46 s |
+| Latency max | 27.644 s |
 | LLM filter items | 0 |
 | LLM input tokens | 0 |
 | LLM output tokens | 0 |

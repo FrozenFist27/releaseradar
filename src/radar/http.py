@@ -55,6 +55,17 @@ class RateLimiter:
         return min(max(cands, default=cap), cap)
 
 
+def backoff_from_headers(headers: dict[str, str], default: float = 60.0, cap: float = 300.0) -> float:
+    """Seconds to wait after a 403/429: Retry-After, else primary-limit reset, else default."""
+    rl = RateLimiter()
+    rl.observe(httpx.Headers(headers))
+    if rl.retry_after:
+        return min(rl.retry_after, cap)
+    if rl.remaining is not None and rl.remaining <= 0 and rl.reset_at:
+        return max(1.0, min(rl.reset_at - time.time(), cap))
+    return default
+
+
 def build_client(timeout: float = 20.0) -> httpx.Client:
     return httpx.Client(
         headers={"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json"},

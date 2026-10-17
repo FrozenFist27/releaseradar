@@ -68,6 +68,10 @@ CREATE TABLE IF NOT EXISTS health_events (
   kind TEXT,
   detail TEXT
 );
+CREATE TABLE IF NOT EXISTS kv (
+  k TEXT PRIMARY KEY,
+  v TEXT
+);
 CREATE TABLE IF NOT EXISTS baselines (
   target TEXT PRIMARY KEY,
   baselined_at TEXT
@@ -232,3 +236,19 @@ def bump_pending_attempt(conn: sqlite3.Connection, item_key: str, error: str) ->
 # ---- health events ----
 def log_health_event(conn: sqlite3.Connection, kind: str, detail: str = "") -> None:
     conn.execute("INSERT INTO health_events(at,kind,detail) VALUES(?,?,?)", (now_iso(), kind, detail))
+
+
+# ---- small persistent key/value state (watchdog, heartbeat, backoff) ----
+def get_kv(conn: sqlite3.Connection, key: str) -> str | None:
+    row = conn.execute("SELECT v FROM kv WHERE k=?", (key,)).fetchone()
+    return row["v"] if row else None
+
+
+def set_kv(conn: sqlite3.Connection, key: str, value: str | None) -> None:
+    if value is None:
+        conn.execute("DELETE FROM kv WHERE k=?", (key,))
+        return
+    conn.execute(
+        "INSERT INTO kv(k,v) VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
+        (key, value),
+    )

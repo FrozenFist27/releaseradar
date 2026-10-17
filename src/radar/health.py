@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -25,12 +26,36 @@ class Watchdog:
     last_alert_at: float | None = None
     alerted: bool = False
     events: list[str] = field(default_factory=list)
+    last_outage_min: float = 0.0
+
+    # --- persistence so the watchdog survives one-shot (systemd timer) runs ---
+    def to_json(self) -> str:
+        return json.dumps(
+            {
+                "failing_since": self.failing_since.isoformat() if self.failing_since else None,
+                "last_alert_at": self.last_alert_at,
+                "alerted": self.alerted,
+            }
+        )
+
+    def load_json(self, raw: str | None) -> None:
+        if not raw:
+            return
+        try:
+            d = json.loads(raw)
+            fs = d.get("failing_since")
+            self.failing_since = datetime.fromisoformat(fs) if fs else None
+            self.last_alert_at = d.get("last_alert_at")
+            self.alerted = bool(d.get("alerted"))
+        except Exception:
+            pass
 
     def record_success(self) -> list[str]:
         """Return any recovery events to emit; clears failure state."""
         out: list[str] = []
         if self.alerted and self.failing_since:
             mins = (_now() - self.failing_since).total_seconds() / 60
+            self.last_outage_min = mins
             out.append("recovery")
             self.events.append(f"recovered_after_{mins:.1f}min")
         self.failing_since = None

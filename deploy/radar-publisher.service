@@ -1,0 +1,10 @@
+[Unit]
+Description=ReleaseRadar latency harness: publish a sandbox release now
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=radar
+WorkingDirectory=/opt/releaseradar
+EnvironmentFile=/etc/releaseradar.env
+ExecStart=/opt/releaseradar/.venv/bin/python /opt/releaseradar/scripts/publish_test_releases.py --now

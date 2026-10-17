@@ -1,0 +1,11 @@
+[Unit]
+Description=Publish a ReleaseRadar sandbox release every 2 hours (latency harness)
+
+[Timer]
+# OnCalendar every 2h with a random-ish minute to avoid a fixed beat.
+OnCalendar=*-*-* 00/2:17:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

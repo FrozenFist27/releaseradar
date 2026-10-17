@@ -78,27 +78,54 @@ def report(
 
 @app.command()
 def simulate_outage(
-    minutes: float = typer.Option(7.0, help="Minutes to keep failing"),
+    minutes: float = typer.Option(6.0, help="Minutes of real failing checks"),
+    interval: float = typer.Option(30.0, help="Seconds between checks during the outage"),
     config: str = typer.Option(None),
 ):
-    """Force consecutive failures to test the loud watchdog alert (no real network)."""
-    from .health import Watchdog
+    """Real outage drill: point the poller at an unreachable API for N minutes.
+
+    Uses a throw-away DB. The watchdog should post ONE loud @here message to the health
+    webhook after `fail_alert_after_s`, then a recovery message once the real API is
+    reachable again. Prints a timestamped timeline.
+    """
+    import tempfile
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from .scheduler import Scheduler
 
     cfg = load_config(config)
     setup_logging()
-    wd = Watchdog(fail_alert_after_s=cfg.yaml.fail_alert_after_s)
-    # Simulate failures fast-forwarded past the threshold.
-    wd.failing_since = wd.failing_since or __import__("datetime").datetime.now(
-        __import__("datetime").timezone.utc
-    )
-    # Backdate to exceed threshold immediately.
-    import datetime as dt
-
-    wd.failing_since = dt.datetime.now(dt.UTC) - dt.timedelta(seconds=minutes * 60 + 1)
-    events = wd.record_failure("simulated outage", "sandbox")
-    typer.echo(f"Simulated {minutes} min outage. Loud-alert events fired: {len(events)}")
-    for e in events:
-        typer.echo(f"  -> {e}")
+    cfg.settings.RADAR_DB_PATH = str(Path(tempfile.mkdtemp()) / "outage.db")
+    cfg.settings.HEALTHCHECKS_PING_URL = ""  # drill must not touch the real dead-man switch
+    bad = Scheduler(cfg, api_base="http://127.0.0.1:9")
+    t0 = datetime.now(UTC)
+    typer.echo(f"{t0.isoformat()} outage start (api unreachable for {minutes} min)")
+    alerted_at = None
+    while (datetime.now(UTC) - t0).total_seconds() < minutes * 60:
+        bad.run_once()
+        if alerted_at is None:
+            with db_session(cfg.db_path) as conn:
+                n = conn.execute(
+                    "SELECT COUNT(*) n FROM health_events WHERE kind='failure_alert'"
+                ).fetchone()["n"]
+            if n:
+                alerted_at = datetime.now(UTC)
+                typer.echo(
+                    f"{alerted_at.isoformat()} LOUD ALERT posted "
+                    f"({(alerted_at - t0).total_seconds():.0f}s after first failure)"
+                )
+        time.sleep(interval)
+    bad.shutdown()
+    good = Scheduler(cfg)
+    good.run_once()
+    t1 = datetime.now(UTC)
+    with db_session(cfg.db_path) as conn:
+        rec = conn.execute(
+            "SELECT detail FROM health_events WHERE kind='recovery'"
+        ).fetchone()
+    good.shutdown()
+    typer.echo(f"{t1.isoformat()} real API restored; recovery event: {rec['detail'] if rec else 'none'}")
 
 
 @app.command("publish-test-release")

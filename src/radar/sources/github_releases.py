@@ -7,7 +7,7 @@ from datetime import datetime
 import httpx
 
 from ..db import get_etag, set_etag
-from ..http import get_with_etag
+from ..http import backoff_from_headers, get_with_etag
 from ..models import FetchResult, Item
 
 API = "https://api.github.com"
@@ -21,7 +21,9 @@ class GithubReleasesSource:
         token: str = "",
         include_prereleases: bool = False,
         per_page: int = 10,
+        api_base: str = API,
     ):
+        self.api_base = api_base.rstrip("/")
         self.client = client
         self.conn = conn
         self.include_prereleases = include_prereleases
@@ -31,7 +33,7 @@ class GithubReleasesSource:
             self.client.headers["X-GitHub-Api-Version"] = "2022-11-28"
 
     def fetch(self, target: str) -> FetchResult:
-        url = f"{API}/repos/{target}/releases"
+        url = f"{self.api_base}/repos/{target}/releases"
         etag = get_etag(self.conn, target)
         out = get_with_etag(self.client, url, etag, params={"per_page": str(self.per_page)})
 
@@ -52,6 +54,7 @@ class GithubReleasesSource:
                 duration_ms=out.duration_ms,
                 rate_remaining=_remaining(out.headers),
                 error=f"rate limited HTTP {out.status_code}",
+                backoff_s=backoff_from_headers(out.headers),
             )
         if out.status_code >= 500:
             return FetchResult(
@@ -60,6 +63,7 @@ class GithubReleasesSource:
                 http_status=out.status_code,
                 duration_ms=out.duration_ms,
                 error=f"server error HTTP {out.status_code}",
+                backoff_s=60.0,
             )
         if out.status_code != 200:
             return FetchResult(

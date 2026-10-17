@@ -38,6 +38,7 @@ class FetchResult(BaseModel):
     rate_remaining: int | None = None
     duration_ms: int = 0
     error: str | None = None
+    backoff_s: float | None = None
 
 
 class FilterDecision(BaseModel):

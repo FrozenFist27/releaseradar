@@ -91,7 +91,7 @@ def to_markdown(r: dict) -> str:
         "# ReleaseRadar — measured run report",
         "",
         f"Generated: {r['generated_at']}",
-        f"Run window: {r['run_start']} → {r['run_end']}",
+        f"Run window: {r['run_start']} -> {r['run_end']}",
         "",
         "| Metric | Value |",
         "|---|---|",

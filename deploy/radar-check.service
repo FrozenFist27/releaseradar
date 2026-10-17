@@ -1,0 +1,15 @@
+[Unit]
+Description=ReleaseRadar single poll cycle (fetch, dedupe, alert, health)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=radar
+WorkingDirectory=/opt/releaseradar
+EnvironmentFile=/etc/releaseradar.env
+ExecStart=/opt/releaseradar/.venv/bin/radar once
+TimeoutStartSec=120
+MemoryMax=300M
+NoNewPrivileges=true
+PrivateTmp=true

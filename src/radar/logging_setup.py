@@ -33,6 +33,9 @@ def setup_logging(log_dir: str | Path = "data/logs", level: str = "INFO") -> Pat
     root.setLevel(getattr(logging, level.upper(), logging.INFO))
     root.addHandler(file_handler)
     root.addHandler(stdout_handler)
+    # httpx logs full URLs at INFO (would leak the Healthchecks ping UUID / webhook URLs).
+    for noisy in ("httpx", "httpcore"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
     structlog.configure(
         processors=[

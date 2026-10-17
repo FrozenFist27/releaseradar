@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-10-17T13:35:35.553026+00:00",
+  "run_start": "2026-10-17T13:25:23.095806+00:00",
+  "run_end": "2026-10-17T13:27:24.736078+00:00",
+  "total_checks": 40,
+  "ok_checks": 40,
+  "error_checks": 0,
+  "uptime_pct": 100.0,
+  "items_seen": 33,
+  "baseline_items": 28,
+  "alerts_count": 5,
+  "duplicate_alerts": 0,
+  "latency": {
+    "n": 5,
+    "p50_s": 8.367,
+    "p95_s": 9.277,
+    "max_s": 9.41,
+    "min_s": 3.664
+  },
+  "llm_filter": {
+    "items_filtered": 0,
+    "input_tokens": 0,
+    "output_tokens": 0
+  }
+}

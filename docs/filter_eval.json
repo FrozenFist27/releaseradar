@@ -1,0 +1,12 @@
+{
+  "n": 30,
+  "accuracy": 1.0,
+  "false_negatives": 0,
+  "false_positives": 0,
+  "fail_open_errors": 0,
+  "fail_open_reasons": [],
+  "input_tokens": 7664,
+  "output_tokens": 3578,
+  "model": "claude-haiku-5-5",
+  "cost_usd": 0.002555
+}

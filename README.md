@@ -2,13 +2,13 @@
 
 > **Know the minute something new ships — never the same alert twice.**
 
-[![tests](https://img.shields.io/badge/tests-42%20passed-brightgreen)](#tests)
+[![tests](https://img.shields.io/badge/tests-43%20passed-brightgreen)](#tests)
 [![licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 [![demo](https://img.shields.io/badge/demo-project-lightgrey)](docs/UPWORK_ENTRY.md)
 
 ReleaseRadar is a small, production-style **monitor-and-alert** service. It watches
 public APIs (GitHub Releases; optionally UK Contracts Finder tender notices) and posts
-**only genuinely new items** to Discord (or Slack) within a minute. Items are tracked
+**only genuinely new items** to Discord within a minute. Items are tracked
 by **stable ID** in SQLite, so a reordered list, an edited release, or a service restart
 can never produce a duplicate alert. An **optional AI filter** (Claude Haiku) screens
 items against plain-English criteria, and a **two-layer health system** (internal
@@ -84,7 +84,7 @@ Real numbers from the VM deployment (GCP e2-micro, `us-central1-a`), pulled with
 | Publish-to-alert latency (n = 13 sandbox releases) | p50 **16.4 s**, p95 **27.5 s**, max **27.6 s**, min 3.1 s (`alerted_at - GitHub published_at`) |
 | Simulated outage -> loud alert | `@here` alert posted **316 s** after the first failing check (5-min threshold, 30 s check interval); recovery message after 6.4 min |
 | VM stopped -> external alert | Healthchecks.io flipped *up -> down* at 16:51 UTC, ~6 min after the last ping at 16:45:15 (period 1 min + grace 5 min) |
-| Monthly running cost | **$0** infrastructure (free tier); LLM filter off by default - **no LLM spend measured** (see below) |
+| Monthly running cost | **$0** infrastructure (free tier); LLM filter off in the VM run; eval spend **$0.005** for 60 calls (see below) |
 
 ### 7-day unattended run
 
@@ -108,65 +108,34 @@ Details in [docs/outage_test.md](docs/outage_test.md).
    A stray browser `GET` of the ping URL from the owner's IP at 16:51 flipped the check back to *up*
    (event #40); it did not come from ReleaseRadar.
 
-### LLM filter - not measured
+### LLM filter (measured)
 
-The optional filter (`claude-haiku-5-5`, prompt caching, `max_tokens=200`) is implemented and unit tested
-with a mocked client. The live 30-item evaluation (`scripts/eval_filter.py`,
-`tests/fixtures/filter_eval.jsonl`) could **not** be run: the configured `ANTHROPIC_API_KEY` was rejected with
-HTTP 401 (key expired). Accuracy and token numbers are therefore `[NOT MEASURED]`.
+Live run of `scripts/eval_filter.py` against the 30 hand-labelled synthetic release notes
+(`tests/fixtures/filter_eval.jsonl`), model `claude-haiku-5-5`, `max_tokens=200`, criteria "security fixes,
+breaking changes or new major features". Two runs, both executed 2026-10-18:
 
-## How to run
+| Run | Accuracy | False negatives | False positives | Fail-open errors | Input tok | Output tok | Cost |
+|---|---|---|---|---|---|---|---|
+| 1 | 96.7% (29/30) | 0 | 1 | 1 (counted as keep) | 7,664 | 3,431 | $0.0025 |
+| 2 (`docs/filter_eval.json`) | 100% (30/30) | 0 | 0 | 0 | 7,664 | 3,578 | $0.0026 |
 
-### Prerequisites
-- Python 3.11+
-- A GitHub token (read-only) for the Releases API
-- (Latency harness) a sandbox repo + a token that can publish releases
-- Two Discord webhooks (alerts + health)
-- A Healthchecks.io check (suggested: period 1 min, grace 5 min) and its ping URL
-- (Optional) an Anthropic API key for the AI filter
-
-### Local
-
-```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
-cp .env.example .env        # fill in secrets; never commit .env
-cp config.example.yaml config.yaml   # pick your watched repos
-radar init-db
-radar once       # single cycle (this is what the systemd timer runs)
-radar run        # poll loop (Ctrl-C to stop)
-radar report     # write docs/results.{md,json}
-radar simulate-outage --minutes 6   # real failing checks -> loud alert -> recovery
-python scripts/publish_test_releases.py --now   # latency harness (sandbox repo)
-```
-
-### Docker
-
-```bash
-cp .env.example .env && cp config.example.yaml config.yaml
-docker compose up -d --build
-```
-
-### Deploy to GCP (free tier)
-
-See [deploy/gcp-e2-micro.md](deploy/gcp-e2-micro.md). Summary: e2-micro in `us-central1-a`,
-1 GB swapfile, code + venv in `/opt/releaseradar`, secrets in `/etc/releaseradar.env`
-(root, chmod 600), `radar-check.timer` runs `radar once` every 30 s (systemd oneshot service),
-`radar-publisher.timer` publishes sandbox releases. Every check is logged as a JSON line
-(journal + `data/logs/radar-<date>.jsonl`) and as a `checks` row.
+That is about 255 input / 119 output tokens and **$0.000085 per item**. Results vary slightly between runs
+(model output is not deterministic); the 1 miss in run 1 was a fail-open (kept, never dropped). Only 30 small
+synthetic items, so treat accuracy as indicative. Prompt-cache hit rate was not measured. The filter is
+**off** in the 7-day VM run, so the VM run spent $0 on LLM.
 
 ## Cost per run / per month
 
 See [docs/cost.md](docs/cost.md). Infrastructure is **$0** inside free tiers (GCP e2-micro +
 30 GB pd-standard, ephemeral IP; GitHub API; Discord webhooks; Healthchecks.io free plan).
-The only variable cost is the optional AI filter; no live LLM call succeeded in this run, so measured
-LLM spend is **$0.00** and a per-item cost is `[NOT MEASURED]` (list price: $0.10 / $0.50 per MTok in/out).
+The only variable cost is the optional AI filter: measured **about $0.000085 per item** (255 in / 119 out tokens,
+list price $0.10 / $0.50 per MTok), i.e. ~$0.0026 per 30-item eval run; the VM run has the filter off ($0).
 One poll cycle (4 repos) takes ~2-5 s wall time and costs nothing.
 
 ## Tests
 
 ```bash
-pytest          # 42 unit tests, no network (respx + freezegun + mocks)
+pytest          # 43 unit tests, no network (respx + freezegun + mocks)
 ruff check src tests scripts
 ```
 
@@ -185,8 +154,9 @@ and the log-based duplicate audit.
 - The free-tier VM can be rebooted; the systemd timer resumes on boot and SQLite state makes
   it restart-safe. A 969 MB box needs the 1 GB swapfile for `pip install`.
 - Only 13 latency samples and a 26-minute window so far; the 7-day numbers are pending.
+- The sandbox repo accumulates ~84 harness releases over the week; the weekly cleanup is not implemented (delete manually).
 - Healthchecks.io detects a dead box only after period + grace (~6 min).
-- The LLM filter has not been evaluated live (expired API key).
+- The LLM filter was evaluated on only 30 synthetic items, and not enabled in the 7-day VM run.
 - The optional LLM filter can be wrong; it **fails open** (alerts rather than drops) and
   caches per item.
 - A deleted-then-recreated release gets a new ID and therefore alerts (documented).

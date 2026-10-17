@@ -16,9 +16,14 @@ _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 class AnthropicFilter:
     def __init__(self, api_key: str, model: str, criteria: str):
+        import os
+
         import anthropic
 
-        self.client = anthropic.Anthropic(api_key=api_key)
+        # Pin the official endpoint: a stray ANTHROPIC_BASE_URL (proxy/gateway) in the
+        # environment must not silently redirect the key. Override with RADAR_ANTHROPIC_BASE_URL.
+        base = os.environ.get("RADAR_ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+        self.client = anthropic.Anthropic(api_key=api_key, base_url=base)
         self.model = model
         self.criteria = criteria
 

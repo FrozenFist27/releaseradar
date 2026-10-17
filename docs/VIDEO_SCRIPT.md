@@ -14,7 +14,7 @@ Total <= 2:00. Screen-record a terminal and Discord side by side. Numbers come f
 | 1:45-2:00 | `radar report` table + README results | "Seven days unattended on a free-tier VM: [final numbers]. Link below." |
 
 Optional shot only if a valid Anthropic key is configured: LLM filter keeping one item with a summary and
-skipping another. (Not measured yet - skip this shot otherwise.)
+skipping another. (Measured: 30-item eval 96.7-100% accuracy, ~$0.000085 per item; see README.)
 
 ## Recording checklist
 

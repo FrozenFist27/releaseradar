@@ -9,7 +9,7 @@ is off by default.
 | GitHub REST API | $0 | $0. Authenticated 5,000 req/h; 4 repos x 2,880 cycles/day = 11,520 requests/day, most of them 304 (not counted against the primary limit). Observed `X-RateLimit-Remaining` stayed above 4,900 |
 | Discord webhooks | $0 | $0 |
 | Healthchecks.io free plan | $0 | $0 |
-| LLM filter (`claude-haiku-5-5`, $0.10 / $0.50 per MTok in/out, <100K context) | items x tokens x price | **$0.00 measured** - filter disabled in the run; the live eval could not run because the API key was rejected (HTTP 401, expired). Per-item token cost: `[NOT MEASURED]` |
+| LLM filter (`claude-haiku-5-5`, $0.10 / $0.50 per MTok in/out, <100K context) | items x tokens x price | **$0 in the VM run** (filter disabled). Live eval, 2 runs x 30 items: 7,664 input + ~3,500 output tokens each = ~$0.0026 per run, **~$0.000085 per item** (255 in / 119 out). Source: `docs/filter_eval.json` |
 
 ## Cost per run
 

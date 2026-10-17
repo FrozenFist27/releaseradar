@@ -94,3 +94,13 @@ def test_eval_fixture_is_30_balanced_labelled_items():
     assert len(rows) == 30
     assert sum(r["label"] == "keep" for r in rows) == 15
     assert all({"title", "body", "label"} <= set(r) for r in rows)
+
+
+def test_anthropic_client_pinned_to_official_endpoint(monkeypatch):
+    """A stray ANTHROPIC_BASE_URL must not redirect the key to another gateway."""
+    from radar.filter.llm import AnthropicFilter
+
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://gateway.invalid")
+    monkeypatch.delenv("RADAR_ANTHROPIC_BASE_URL", raising=False)
+    f = AnthropicFilter("test-key", "claude-haiku-5-5", "x")
+    assert str(f.client.base_url).startswith("https://api.anthropic.com")

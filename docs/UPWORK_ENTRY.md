@@ -18,7 +18,7 @@ Measured so far (VM, 26-minute window, 2026-10-17):
 - 148 checks, 0 errors; 13 sandbox releases alerted exactly once each (0 duplicates, audited from the DB and the journal)
 - Publish-to-alert latency: p50 16.4 s, p95 27.5 s, max 27.6 s (30 s polling)
 - Simulated outage -> loud alert after 316 s; VM stopped -> Healthchecks.io down after ~6 min
-- Running cost: $0 infrastructure; no LLM spend measured
+- Running cost: $0 infrastructure; optional AI filter measured at ~$0.000085 per item (30-item eval: 100% accuracy in one run, 96.7% in another)
 - 7-day unattended result: `[PENDING - fill from docs/results.md after 2026-10-24]`
 
 Stack: Python 3.11, httpx, SQLite, Discord webhooks, Healthchecks.io, systemd timers, Docker, GCP free tier.

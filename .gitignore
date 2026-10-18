@@ -34,3 +34,6 @@ coverage.xml
 .DS_Store
 Thumbs.db
 *.log
+
+# internal design notes (kept local)
+IDEATION.md

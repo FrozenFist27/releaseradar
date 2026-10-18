@@ -15,7 +15,7 @@ items against plain-English criteria, and a **two-layer health system** (interna
 watchdog + external Healthchecks.io dead-man switch) tells you if the monitor itself
 stops.
 
-**This is a demo project.** Every number below comes from a real run against
+Every number below comes from a real run against
 public/synthetic data (see [Results](#results-measured)).
 
 ---

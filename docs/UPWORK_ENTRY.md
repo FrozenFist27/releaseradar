@@ -1,13 +1,13 @@
-# Upwork portfolio entry (label: DEMO PROJECT)
+# Upwork portfolio entry
 
-> Demo project built to showcase a repeatable skill. Not a live client engagement. All figures come
+> All figures come
 > from real runs on public/synthetic data; the 7-day figures are pending (run started 2026-10-17T16:42Z).
 
-**Title:** ReleaseRadar - Monitor & Alert Bot with Zero-Duplicate Alerts (Demo Project)
+**Title:** ReleaseRadar - Monitor & Alert Bot with Zero-Duplicate Alerts
 
 **Description:**
 
-Demo project. A small, production-style monitor that watches public sources (GitHub releases) and posts
+A small, production-style monitor that watches public sources (GitHub releases) and posts
 only genuinely new items to Discord within a minute. Items are tracked by stable ID in SQLite, so
 reordered, edited or re-shared entries never alert twice. A health layer posts heartbeats, raises a loud
 `@here` alert if checks fail for 5+ minutes, and an external dead-man switch (Healthchecks.io) alerts if the

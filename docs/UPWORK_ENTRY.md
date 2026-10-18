@@ -35,3 +35,5 @@ screenshot, results table.
 - Restart-safe state; every poll is a fresh process and nothing is lost or repeated.
 - Two-layer observability: internal watchdog + external dead-man switch, both drilled for real.
 - Honest reporting: pending items are labelled as pending.
+
+**Links:** GitHub repo https://github.com/FrozenFist27/releaseradar · demo video: to be recorded (script in `docs/VIDEO_SCRIPT.md`).
